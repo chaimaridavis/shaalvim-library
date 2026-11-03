@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireApprovedMember, type ContactSetting, type ReminderAfter } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { siteOrigin } from "@/lib/site-url";
 import { cleanEmail, cleanName, cleanWhatsApp } from "@/lib/validate";
 
 export type ProfileState = { error?: string; saved?: string };
@@ -60,7 +61,10 @@ export async function saveProfile(_prev: ProfileState, formData: FormData): Prom
     .eq("member_id", member.id)
     .single();
   if (current && current.email !== email) {
-    const { error } = await supabase.auth.updateUser({ email });
+    const { error } = await supabase.auth.updateUser(
+      { email },
+      { emailRedirectTo: `${await siteOrigin()}/auth/callback?next=email` },
+    );
     if (error) {
       if (error.code === "email_exists") {
         return { error: "Your other changes are saved, but another member already uses that email." };

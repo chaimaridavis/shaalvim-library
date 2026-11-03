@@ -7,7 +7,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
   const member = await getCurrentMember();
   if (member) redirect(member.status === "approved" ? "/" : "/waiting");
 
-  const { welcome, error } = await searchParams;
+  const { welcome } = await searchParams;
 
   return (
     <main className="page">
@@ -19,11 +19,6 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         {welcome === "admin" && (
           <p className="notice">
             Your administrator account is ready. Sign in below to start approving members.
-          </p>
-        )}
-        {error === "link" && (
-          <p className="notice">
-            That sign-in link has expired or was already used. Enter your email to get a new one.
           </p>
         )}
       </div>

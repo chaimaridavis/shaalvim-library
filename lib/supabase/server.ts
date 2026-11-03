@@ -27,6 +27,15 @@ export async function createClient() {
   });
 }
 
+// Sends emailed links that sign the member in whichever browser opens them,
+// which matters on phones where the email app may open a different browser.
+// It holds no session itself; /auth/callback stores the session.
+export function createLinkClient() {
+  return createPlainClient(url, publishableKey, {
+    auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false },
+  });
+}
+
 // Bypasses the database's rules. Use only after checking who is asking.
 export function createAdminClient() {
   return createPlainClient(url, process.env.SUPABASE_SECRET_KEY!, {

@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createLinkClient } from "@/lib/supabase/server";
+import { siteOrigin } from "@/lib/site-url";
 import { cleanEmail } from "@/lib/validate";
 
 export type SignInState = { error?: string; sentTo?: string; email?: string };
@@ -15,10 +16,12 @@ export async function sendSignInLink(
   const email = cleanEmail(formData.get("email"));
   if (!email) return { error: "Please check your email address.", email: typed };
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await createLinkClient().auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: false },
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: `${await siteOrigin()}/auth/callback`,
+    },
   });
 
   if (error) {
