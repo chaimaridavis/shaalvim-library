@@ -777,3 +777,14 @@ a {
 .book-link {
   text-decoration: none;
 }
+
+/* Stage 4: waitlists and reminders */
+.strong {
+  font-weight: 700;
+}
+
+.borrowed-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}

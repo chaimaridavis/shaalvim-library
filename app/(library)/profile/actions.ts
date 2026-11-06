@@ -53,6 +53,8 @@ export async function saveProfile(_prev: ProfileState, formData: FormData): Prom
     console.error("saving profile failed", memberError ?? contactError);
     return { error: "Something went wrong. Please try again in a minute." };
   }
+  // New limits or ending a pause may make room for people on waitlists.
+  await supabase.rpc("refresh_my_waitlists");
   revalidatePath("/", "layout");
 
   const { data: current } = await supabase
