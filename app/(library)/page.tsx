@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { requireApprovedMember } from "@/lib/auth";
-import { byTitle, groupByBook, loadCopies, statusLabel, type Title } from "@/lib/books";
+import { byTitle, groupByBook, loadCopies, titleStatus, type Title } from "@/lib/books";
 import { BookGrid, type GridItem } from "./book-grid";
 import { BrowseControls } from "./browse-controls";
 
@@ -15,16 +15,10 @@ const plain = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9
 
 function gridItem(title: Title, memberId: string): GridItem {
   const { book, copies } = title;
-  const borrowable = copies.filter((c) => c.owner.id !== memberId && c.status === "available");
   const mine = copies.every((c) => c.owner.id === memberId);
   const lines = [book.author];
   lines.push(copies.length > 1 ? `${copies.length} copies` : mine ? "Yours" : copies[0].owner.full_name);
-
-  const status: GridItem["status"] = mine
-    ? { text: "On your shelf", tone: "muted" }
-    : borrowable.length
-      ? { text: statusLabel.available, tone: "available" }
-      : { text: statusLabel.paused, tone: "warning" };
+  const status = titleStatus(copies, memberId);
   return { bookId: book.id, title: book.title, author: book.author, coverUrl: book.cover_url, lines, status };
 }
 

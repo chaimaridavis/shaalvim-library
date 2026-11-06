@@ -1,35 +1,71 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireApprovedMember } from "@/lib/auth";
-import { firstName, initials, loadCopies, statusLabel, type Copy } from "@/lib/books";
+import {
+  copyTone,
+  firstName,
+  initials,
+  loadCopies,
+  statusLabel,
+  titleStatus,
+  type Copy,
+} from "@/lib/books";
+import { createClient } from "@/lib/supabase/server";
 import { Cover } from "../../../cover";
+import { ActionButton } from "../../action-button";
 import { BackLink } from "../../back-link";
+import { ContactButton, getContact } from "../../contact";
+import { cancelRequest, requestCopy } from "../../loan-actions";
 
 const plural = (n: number) => `${n} ${n === 1 ? "book" : "books"}`;
+
+type MyRequest = { id: string; copy_id: string; status: "open" | "accepted" };
 
 export default async function BookPage({ params }: PageProps<"/books/[id]">) {
   const member = await requireApprovedMember();
   const { id } = await params;
+  const supabase = await createClient();
 
   const all = await loadCopies();
   const copies = all.filter((c) => c.book.id === id);
   if (!copies.length) notFound();
   const book = copies[0].book;
 
+  const { data: requests } = await supabase
+    .from("requests")
+    .select("id, copy_id, status")
+    .eq("requester_id", member.id)
+    .in("status", ["open", "accepted"])
+    .in(
+      "copy_id",
+      copies.map((c) => c.id),
+    )
+    .overrideTypes<MyRequest[], { merge: false }>();
+  const myRequest = requests?.[0] ?? null;
+
+  const { data: owners } = await supabase
+    .from("members")
+    .select("id, contact_setting")
+    .in("id", [...new Set(copies.map((c) => c.owner.id))]);
+  const settingOf = new Map((owners ?? []).map((o) => [o.id, o.contact_setting as string]));
+
   const shelfSize = new Map<string, number>();
   for (const c of all) shelfSize.set(c.owner.id, (shelfSize.get(c.owner.id) ?? 0) + 1);
 
-  // The copy to feature first: one the member can borrow, else any other.
-  const others = copies.filter((c) => c.owner.id !== member.id);
-  const featured = others.find((c) => c.status === "available") ?? others[0] ?? copies[0];
-  const rest = copies.filter((c) => c !== featured);
+  // The copy to feature first: one I've asked for, else one I can borrow
+  // now, else any other member's.
   const isMine = (c: Copy) => c.owner.id === member.id;
-
-  const headline = others.some((c) => c.status === "available")
-    ? { text: statusLabel.available, tone: "available" }
-    : others.length
-      ? { text: statusLabel.paused, tone: "warning" }
-      : { text: "On your shelf", tone: "muted" };
+  const others = copies.filter((c) => !isMine(c));
+  const featured =
+    copies.find((c) => c.id === myRequest?.copy_id) ??
+    others.find((c) => c.status === "available") ??
+    others[0] ??
+    copies[0];
+  const rest = copies.filter((c) => c !== featured);
+  const headline = titleStatus(copies, member.id);
+  const ownerName = firstName(featured.owner.full_name);
+  const ownerSetting = settingOf.get(featured.owner.id);
+  const contact = myRequest ? await getContact(featured.owner.id) : null;
 
   return (
     <div>
@@ -64,13 +100,55 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
         </svg>
       </Link>
 
-      {!isMine(featured) && (
-        <p className="muted" style={{ marginTop: 16 }}>
-          {featured.status === "paused"
-            ? `${firstName(featured.owner.full_name)} isn't lending right now.`
-            : `Asking ${firstName(featured.owner.full_name)} to borrow it opens in the next stage of the site.`}
-        </p>
-      )}
+      <div style={{ marginTop: 16 }}>
+        {myRequest ? (
+          <div className="card stack" role="status">
+            <h2 className="card-heading">
+              {myRequest.status === "accepted"
+                ? `${ownerName} accepted your request`
+                : `You asked ${ownerName} to borrow this book`}
+            </h2>
+            {contact ? (
+              <>
+                <p>Get in touch to arrange a time to pick it up.</p>
+                <ContactButton contact={contact} name={ownerName} />
+              </>
+            ) : (
+              <p>
+                {ownerName} will see your request. Once {ownerName} accepts it, you&rsquo;ll see a
+                WhatsApp number here to arrange a time to pick it up.
+              </p>
+            )}
+            <ActionButton
+              action={cancelRequest.bind(null, myRequest.id)}
+              pendingText="Cancelling…"
+              className="text-link"
+            >
+              Cancel request
+            </ActionButton>
+          </div>
+        ) : isMine(featured) ? null : featured.status === "available" ? (
+          <>
+            <ActionButton action={requestCopy.bind(null, featured.id)} pendingText="Sending your request…">
+              Request to borrow
+            </ActionButton>
+            <p className="muted" style={{ marginTop: 12 }}>
+              {ownerSetting === "whatsapp_after_accept"
+                ? `${ownerName} will see your request. Once ${ownerName} accepts it, you'll get a WhatsApp number to arrange a time to pick it up.`
+                : ownerSetting === "email_only"
+                  ? `${ownerName} will see your request. You will get an email address to arrange a time to pick it up.`
+                  : `${ownerName} will see your request. You will get a WhatsApp number to arrange a time to pick it up.`}
+            </p>
+          </>
+        ) : featured.status === "lent" ? (
+          <p className="muted">
+            {ownerName}&rsquo;s copy is lent out right now. Joining a waitlist for it arrives in the
+            next stage of the site.
+          </p>
+        ) : (
+          <p className="muted">{ownerName} isn&rsquo;t lending right now.</p>
+        )}
+      </div>
 
       {rest.length > 0 && (
         <>
@@ -79,14 +157,23 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
           </h2>
           <ul className="copy-list">
             {rest.map((c) => (
-              <li key={c.id}>
+              <li key={c.id} className="copy-item">
                 <Link href={`/members/${c.owner.id}`} className="copy-row">
                   <span className="avatar small-avatar">{initials(c.owner.full_name)}</span>
                   <span className="copy-owner">{isMine(c) ? "You" : c.owner.full_name}</span>
-                  <span className={`status status-${c.status === "available" ? "available" : "warning"}`}>
+                  <span className={`status status-${isMine(c) ? "muted" : copyTone(c.status)}`}>
                     {isMine(c) ? "Yours" : statusLabel[c.status]}
                   </span>
                 </Link>
+                {!myRequest && !isMine(c) && c.status === "available" && (
+                  <ActionButton
+                    action={requestCopy.bind(null, c.id)}
+                    pendingText="Sending…"
+                    className="button secondary small-button"
+                  >
+                    Request {firstName(c.owner.full_name)}&rsquo;s copy
+                  </ActionButton>
+                )}
               </li>
             ))}
           </ul>

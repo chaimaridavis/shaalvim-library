@@ -11,8 +11,7 @@ export type Book = {
   cover_url: string | null;
 };
 
-// Stage 3 adds "lent" once loans exist.
-export type CopyStatus = "available" | "paused";
+export type CopyStatus = "available" | "lent" | "paused";
 
 export type Copy = {
   id: string;
@@ -25,6 +24,7 @@ export type Copy = {
 type CopyRow = {
   id: string;
   added_at: string;
+  on_loan: boolean;
   books: Book;
   members: { id: string; full_name: string; lending_paused: boolean };
 };
@@ -35,7 +35,7 @@ export async function loadCopies(ownerId?: string): Promise<Copy[]> {
   let query = supabase
     .from("copies")
     .select(
-      "id, added_at, books(id, title, author, first_published, category, cover_url), members(id, full_name, lending_paused)",
+      "id, added_at, on_loan, books(id, title, author, first_published, category, cover_url), members(id, full_name, lending_paused)",
     )
     .is("removed_at", null)
     .order("added_at", { ascending: false });
@@ -48,14 +48,35 @@ export async function loadCopies(ownerId?: string): Promise<Copy[]> {
     added_at: row.added_at,
     book: row.books,
     owner: { id: row.members.id, full_name: row.members.full_name },
-    status: row.members.lending_paused ? "paused" : "available",
+    status: row.on_loan ? "lent" : row.members.lending_paused ? "paused" : "available",
   }));
 }
 
 export const statusLabel: Record<CopyStatus, string> = {
   available: "Available",
+  lent: "Lent out",
   paused: "Not lending right now",
 };
+
+export type StatusTone = "available" | "warning" | "muted";
+
+export function copyTone(status: CopyStatus): StatusTone {
+  return status === "available" ? "available" : "warning";
+}
+
+// The one status shown for a book that several members may own: whether the
+// viewer can borrow a copy now.
+export function titleStatus(copies: Copy[], viewerId: string): { text: string; tone: StatusTone } {
+  const others = copies.filter((c) => c.owner.id !== viewerId);
+  if (!others.length) {
+    return copies.some((c) => c.status === "lent")
+      ? { text: statusLabel.lent, tone: "warning" }
+      : { text: "On your shelf", tone: "muted" };
+  }
+  if (others.some((c) => c.status === "available")) return { text: statusLabel.available, tone: "available" };
+  if (others.some((c) => c.status === "lent")) return { text: statusLabel.lent, tone: "warning" };
+  return { text: statusLabel.paused, tone: "warning" };
+}
 
 // One entry per book, so several members' copies show once.
 export type Title = { book: Book; copies: Copy[] };

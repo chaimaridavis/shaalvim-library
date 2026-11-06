@@ -30,7 +30,7 @@ export default async function MyBooksPage() {
             author: c.book.author,
             coverUrl: c.book.cover_url,
             statusText: c.status === "available" ? "On your shelf" : statusLabel[c.status],
-            warning: false,
+            warning: c.status === "lent",
           }))}
         />
       </div>

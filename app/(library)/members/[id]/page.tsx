@@ -1,16 +1,10 @@
 import { notFound } from "next/navigation";
 import { requireApprovedMember } from "@/lib/auth";
-import { byTitle, firstName, groupByBook, initials, loadCopies, statusLabel } from "@/lib/books";
+import { byTitle, copyTone, firstName, groupByBook, initials, loadCopies, statusLabel } from "@/lib/books";
 import { createClient } from "@/lib/supabase/server";
 import { BackLink } from "../../back-link";
 import { BookGrid } from "../../book-grid";
-
-// wa.me needs the number in international form without "+" or leading 0.
-function whatsAppLink(number: string) {
-  let digits = number.replace(/\D/g, "");
-  if (digits.startsWith("0")) digits = `972${digits.slice(1)}`;
-  return `https://wa.me/${digits}`;
-}
+import { ContactButton, getContact } from "../../contact";
 
 export default async function MemberPage({ params }: PageProps<"/members/[id]">) {
   const viewer = await requireApprovedMember();
@@ -25,14 +19,11 @@ export default async function MemberPage({ params }: PageProps<"/members/[id]">)
     .maybeSingle();
   if (!person) notFound();
 
-  const [copies, contact] = await Promise.all([
-    loadCopies(person.id),
-    supabase.rpc("get_contact", { target: person.id }).maybeSingle<{ kind: string; value: string }>(),
-  ]);
+  const [copies, contact] = await Promise.all([loadCopies(person.id), getContact(person.id)]);
   const titles = groupByBook(copies).sort((a, b) => byTitle(a.book, b.book));
   const isMe = person.id === viewer.id;
   const name = firstName(person.full_name);
-  const lentOut = 0; // Loans arrive in Stage 3.
+  const lentOut = copies.filter((c) => c.status === "lent").length;
 
   return (
     <div>
@@ -47,27 +38,8 @@ export default async function MemberPage({ params }: PageProps<"/members/[id]">)
         </div>
       </div>
 
-      {!isMe && contact.data?.kind === "whatsapp" && (
-        <>
-          <a className="button full" href={whatsAppLink(contact.data.value)} target="_blank" rel="noreferrer">
-            <ChatIcon /> Message on WhatsApp
-          </a>
-          <p className="muted small" style={{ textAlign: "center", marginTop: 8 }}>
-            Only approved members can see this number.
-          </p>
-        </>
-      )}
-      {!isMe && contact.data?.kind === "email" && (
-        <>
-          <a className="button full" href={`mailto:${contact.data.value}`}>
-            Email {name}
-          </a>
-          <p className="muted small" style={{ textAlign: "center", marginTop: 8 }}>
-            {contact.data.value}
-          </p>
-        </>
-      )}
-      {!isMe && !contact.data && person.contact_setting === "whatsapp_after_accept" && (
+      {!isMe && contact && <ContactButton contact={contact} name={name} />}
+      {!isMe && !contact && person.contact_setting === "whatsapp_after_accept" && (
         <p className="muted">
           {name} shares a WhatsApp number once they accept your request to borrow a book.
         </p>
@@ -83,10 +55,7 @@ export default async function MemberPage({ params }: PageProps<"/members/[id]">)
               author: book.author,
               coverUrl: book.cover_url,
               lines: [],
-              status:
-                c[0].status === "available"
-                  ? { text: statusLabel.available, tone: "available" }
-                  : { text: statusLabel.paused, tone: "warning" },
+              status: { text: statusLabel[c[0].status], tone: copyTone(c[0].status) },
             }))}
           />
         ) : (
@@ -94,18 +63,5 @@ export default async function MemberPage({ params }: PageProps<"/members/[id]">)
         )}
       </div>
     </div>
-  );
-}
-
-function ChatIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden style={{ marginRight: 10 }}>
-      <path
-        d="M4 19.5 5.3 16A7.5 7.5 0 1 1 8 18.7L4 19.5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

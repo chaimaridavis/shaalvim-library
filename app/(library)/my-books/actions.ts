@@ -179,15 +179,11 @@ export async function addBooks(
   return { added: newIds.length, alreadyOnShelf: bookIds.length - newIds.length };
 }
 
+// Also cancels open requests for the copy; a loan stays until it's returned.
 export async function removeCopy(copyId: string) {
-  const member = await requireApprovedMember();
+  await requireApprovedMember();
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("copies")
-    .update({ removed_at: new Date().toISOString() })
-    .eq("id", copyId)
-    .eq("owner_id", member.id)
-    .is("removed_at", null);
+  const { error } = await supabase.rpc("remove_copy", { p_copy: copyId });
   if (error) throw error;
   revalidatePath("/", "layout");
 }

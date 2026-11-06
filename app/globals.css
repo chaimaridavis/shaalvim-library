@@ -723,3 +723,57 @@ a {
   align-items: center;
   gap: 8px;
 }
+
+/* Stage 3: requests and loans */
+.card-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 700;
+  color: var(--green);
+  text-decoration: none;
+}
+
+.button.outline {
+  background: var(--card);
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.loan-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.loan-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.loan-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.copy-item {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.copy-item .action {
+  margin-left: 54px;
+}
+
+.action .text-link {
+  color: var(--green);
+}
+
+.book-link {
+  text-decoration: none;
+}
