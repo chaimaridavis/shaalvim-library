@@ -18,7 +18,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         <h1>Sign in</h1>
         {welcome === "admin" && (
           <p className="notice">
-            Your administrator account is ready. Sign in below to start approving members.
+            Your administrator account is ready. Sign in with the password you just chose.
           </p>
         )}
       </div>

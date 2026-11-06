@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/server";
-import { cleanEmail, cleanName, cleanWhatsApp } from "@/lib/validate";
+import { cleanEmail, cleanName, cleanPassword, cleanWhatsApp, passwordRule } from "@/lib/validate";
 
 export type JoinState = {
   error?: string;
@@ -18,16 +18,19 @@ export async function askToJoin(_prev: JoinState, formData: FormData): Promise<J
   const fullName = cleanName(formData.get("full_name"));
   const email = cleanEmail(formData.get("email"));
   const whatsapp = cleanWhatsApp(formData.get("whatsapp"));
+  const password = cleanPassword(formData.get("password"));
 
   if (!fullName) return { error: "Please enter your first and last name.", values };
   if (!email) return { error: "Please check your email address.", values };
   if (!whatsapp) return { error: "Please check your WhatsApp number.", values };
+  if (!password) return { error: `Please choose a password. ${passwordRule}`, values };
 
   const isAdmin = email === process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const admin = createAdminClient();
 
   const { data: created, error } = await admin.auth.admin.createUser({
     email,
+    password,
     email_confirm: true,
     user_metadata: { full_name: fullName },
   });

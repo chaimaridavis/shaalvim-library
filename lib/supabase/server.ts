@@ -27,7 +27,7 @@ export async function createClient() {
   });
 }
 
-// Sends emailed links that sign the member in whichever browser opens them,
+// Sends forgot-password links that work in whichever browser opens them,
 // which matters on phones where the email app may open a different browser.
 // It holds no session itself; /auth/callback stores the session.
 export function createLinkClient() {

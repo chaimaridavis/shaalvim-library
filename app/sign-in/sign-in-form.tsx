@@ -1,26 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
-import { sendSignInLink, type SignInState } from "./actions";
+import Link from "next/link";
+import { signIn, type SignInState } from "./actions";
 import { SubmitButton } from "../submit-button";
 
 export function SignInForm() {
-  const [state, formAction] = useActionState<SignInState, FormData>(sendSignInLink, {});
-
-  if (state.sentTo) {
-    return (
-      <div className="card stack" role="status">
-        <h2>Check your email</h2>
-        <p>
-          We sent a sign-in link to <strong>{state.sentTo}</strong>. Open the email
-          and tap the link to sign in. It works for one hour.
-        </p>
-        <p className="muted small">
-          Nothing there after a few minutes? Look in your spam folder.
-        </p>
-      </div>
-    );
-  }
+  const [state, formAction] = useActionState<SignInState, FormData>(signIn, {});
 
   return (
     <form action={formAction} className="stack" noValidate>
@@ -36,14 +22,27 @@ export function SignInForm() {
           defaultValue={state.email}
           required
         />
-        <p className="hint">We&rsquo;ll email you a link. No password needed.</p>
+      </div>
+      <div className="field">
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          className="input"
+          autoComplete="current-password"
+          required
+        />
+        <p className="hint">
+          <Link href="/forgot-password">Forgot your password?</Link>
+        </p>
       </div>
       {state.error && (
         <p className="error" role="alert">
           {state.error}
         </p>
       )}
-      <SubmitButton pendingText="Sending…">Email me a sign-in link</SubmitButton>
+      <SubmitButton pendingText="Signing in…">Sign in</SubmitButton>
     </form>
   );
 }

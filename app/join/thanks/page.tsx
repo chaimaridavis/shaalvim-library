@@ -10,7 +10,8 @@ export default function ThanksPage() {
         <h1>Thank you for asking to join</h1>
         <p>
           An organizer will review your request and email you once you&rsquo;re
-          approved. Then you can sign in and start borrowing.
+          approved. Then you can sign in with your email and password and start
+          borrowing.
         </p>
         <p>
           <Link href="/sign-in">Sign in</Link>

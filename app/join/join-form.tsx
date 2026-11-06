@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { askToJoin, type JoinState } from "./actions";
 import { SubmitButton } from "../submit-button";
+import { passwordRule } from "@/lib/validate";
 
 export function JoinForm() {
   const [state, formAction] = useActionState<JoinState, FormData>(askToJoin, {});
@@ -47,6 +48,18 @@ export function JoinForm() {
           required
         />
         <p className="hint">Only approved members can see your number.</p>
+      </div>
+      <div className="field">
+        <label htmlFor="password">Choose a password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          className="input"
+          autoComplete="new-password"
+          required
+        />
+        <p className="hint">{passwordRule}</p>
       </div>
       {state.error && (
         <p className="error" role="alert">

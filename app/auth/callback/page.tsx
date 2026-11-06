@@ -4,16 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/browser";
 
-// Where links in Supabase's emails lead. A sign-in link arrives with the
-// session in the part of the address after "#", which only the browser can
-// read; a change-of-email link arrives with a one-time "code" instead.
+// Where links in Supabase's emails lead. A forgot-password link arrives with
+// the session in the part of the address after "#", which only the browser
+// can read; a change-of-email link arrives with a one-time "code" instead.
 export default function AuthCallbackPage() {
   const [problem, setProblem] = useState<string | null>(null);
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.slice(1));
-    const next = query.get("next") === "email" ? "/profile?email=confirmed" : "/";
+    const destinations: Record<string, string> = {
+      email: "/profile?email=confirmed",
+      reset: "/reset-password",
+    };
+    const next = destinations[query.get("next") ?? ""] ?? "/";
     const supabase = createClient();
 
     async function finish() {
