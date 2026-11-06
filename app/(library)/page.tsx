@@ -8,6 +8,7 @@ const kindNames: Record<string, string> = {
   childrens: "children's",
   fiction: "fiction",
   nonfiction: "non-fiction",
+  comics: "comics",
 };
 
 const plain = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]/g, "");

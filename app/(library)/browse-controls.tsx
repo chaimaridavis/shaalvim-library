@@ -9,6 +9,7 @@ const kinds = [
   { value: "childrens", label: "Children's" },
   { value: "fiction", label: "Fiction" },
   { value: "nonfiction", label: "Non-fiction" },
+  { value: "comics", label: "Comics" },
 ];
 
 export function BrowseControls() {

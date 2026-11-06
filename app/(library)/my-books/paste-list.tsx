@@ -203,7 +203,7 @@ export function PasteList() {
 
           {missingKind > 0 && (
             <p className="warning small" style={{ marginTop: 12 }}>
-              Please pick Children&rsquo;s, Fiction or Non-fiction for {plural(missingKind)}.
+              Please pick a kind of book for {plural(missingKind)}.
             </p>
           )}
           {chosen.length > 0 && (

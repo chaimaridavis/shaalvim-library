@@ -13,7 +13,7 @@ import {
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 const maxLines = 60;
-const categories: Category[] = ["childrens", "fiction", "nonfiction"];
+const categories: Category[] = ["childrens", "fiction", "nonfiction", "comics"];
 const coverHosts = ["covers.openlibrary.org", "books.google.com", "books.googleusercontent.com"];
 
 export type FoundList = { matches: LineMatch[]; tooMany?: boolean };

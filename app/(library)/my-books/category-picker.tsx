@@ -6,6 +6,7 @@ export const categoryNames: Record<Category, string> = {
   childrens: "Children's",
   fiction: "Fiction",
   nonfiction: "Non-fiction",
+  comics: "Comics",
 };
 
 export function CategoryPicker({

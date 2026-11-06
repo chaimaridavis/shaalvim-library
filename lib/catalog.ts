@@ -1,6 +1,6 @@
 import "server-only";
 
-export type Category = "childrens" | "fiction" | "nonfiction";
+export type Category = "childrens" | "fiction" | "nonfiction" | "comics";
 
 // A book as found in a public catalog, before it is saved to the library.
 export type CatalogBook = {
@@ -34,6 +34,14 @@ export function matchKey(title: string, author = ""): string {
   return `${clean(title)}|${clean(author)}`;
 }
 
+const comicsMarkers = [
+  "comic books, strips",
+  "comic strips",
+  "comics & graphic novels",
+  "graphic novels",
+  "cartoons and caricatures",
+  "american wit and humor, pictorial",
+];
 const childrensMarkers = [
   "picture book",
   "children's fiction",
@@ -68,7 +76,21 @@ const nonfictionMarkers = [
 // A best guess from the catalog's subject list. Members can change it.
 export function categoryFrom(subjects: string[]): Category | null {
   const all = subjects.map((s) => s.toLowerCase());
-  const has = (markers: string[]) => all.some((s) => markers.some((m) => s.includes(m)));
+  const matches = (list: string[], markers: string[]) =>
+    list.some((s) => markers.some((m) => s.includes(m)));
+  const has = (markers: string[]) => matches(all, markers);
+
+  // Comics only when nothing else describes it as a novel or children's book:
+  // the catalog lists comic-book editions of novels too, such as The Hobbit.
+  const comicSubjects = all.filter((s) => comicsMarkers.some((m) => s.includes(m)));
+  const otherSubjects = all.filter((s) => !comicSubjects.includes(s));
+  if (
+    comicSubjects.length &&
+    !matches(otherSubjects, fictionMarkers) &&
+    !matches(otherSubjects, childrensMarkers)
+  ) {
+    return "comics";
+  }
   if (has(childrensMarkers)) return "childrens";
   if (has(fictionMarkers) && !all.some((s) => s.includes("non-fiction") || s.includes("nonfiction"))) {
     return "fiction";
