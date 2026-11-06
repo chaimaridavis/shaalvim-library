@@ -18,8 +18,11 @@ export function Menu({ isAdmin }: { isAdmin: boolean }) {
     <nav className="menu" aria-label="Main menu">
       <ul>
         {items.map((tab) => {
+          // Book and member pages are reached from Browse.
           const current =
-            tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
+            tab.href === "/"
+              ? pathname === "/" || pathname.startsWith("/books") || pathname.startsWith("/members")
+              : pathname.startsWith(tab.href);
           return (
             <li key={tab.href}>
               <Link href={tab.href} aria-current={current ? "page" : undefined}>
