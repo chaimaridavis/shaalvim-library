@@ -14,7 +14,7 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profile"
   const { email } = await searchParams;
 
   return (
-    <>
+    <div className="narrow">
       <h1 style={{ marginBottom: 24 }}>Profile</h1>
       <ProfileForm
         member={member}
@@ -31,6 +31,6 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profile"
           Sign out
         </button>
       </form>
-    </>
+    </div>
   );
 }

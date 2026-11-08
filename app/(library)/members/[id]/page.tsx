@@ -13,7 +13,7 @@ export default async function MemberPage({ params }: PageProps<"/members/[id]">)
 
   const { data: person } = await supabase
     .from("members")
-    .select("id, full_name, contact_setting")
+    .select("id, full_name")
     .eq("id", id)
     .eq("status", "approved")
     .maybeSingle();
@@ -39,9 +39,9 @@ export default async function MemberPage({ params }: PageProps<"/members/[id]">)
       </div>
 
       {!isMe && contact && <ContactButton contact={contact} name={name} />}
-      {!isMe && !contact && person.contact_setting === "whatsapp_after_accept" && (
+      {!isMe && !contact && (
         <p className="muted">
-          {name} shares a WhatsApp number once they accept your request to borrow a book.
+          {name}&rsquo;s WhatsApp number appears here once {name} accepts one of your requests to borrow a book.
         </p>
       )}
 

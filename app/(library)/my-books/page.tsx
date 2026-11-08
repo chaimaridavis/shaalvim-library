@@ -1,10 +1,10 @@
 import { requireApprovedMember } from "@/lib/auth";
-import { byTitle, loadCopies, statusLabel } from "@/lib/books";
+import { byTitle, loadCopies, minBooksToBorrow, statusLabel } from "@/lib/books";
 import { AddOne } from "./add-one";
 import { PasteList } from "./paste-list";
 import { Shelf } from "./shelf";
 
-export default async function MyBooksPage() {
+export default async function MyBooksPage({ searchParams }: PageProps<"/my-books">) {
   const member = await requireApprovedMember();
   const copies = (await loadCopies(member.id)).sort((a, b) => byTitle(a.book, b.book));
 
@@ -14,16 +14,26 @@ export default async function MyBooksPage() {
       <p className="muted" style={{ marginTop: 6 }}>
         You have {copies.length} {copies.length === 1 ? "book" : "books"} on your shelf.
       </p>
+      {copies.length < minBooksToBorrow && (
+        <p className="notice" style={{ marginTop: 16 }}>
+          {(await searchParams).welcome ? "Welcome to the library! " : ""}
+          Add at least {minBooksToBorrow} of your own books to start borrowing other
+          members&rsquo; books.
+          {copies.length > 0 && ` ${minBooksToBorrow - copies.length} to go.`}
+        </p>
+      )}
 
-      <div className="card" style={{ marginTop: 20 }}>
-        <AddOne />
-        <hr className="divider" />
-        <PasteList />
-      </div>
+      <div className="two-columns">
+        <div className="card" style={{ marginTop: 20 }}>
+          <AddOne />
+          <hr className="divider" />
+          <PasteList />
+        </div>
 
-      <h2 style={{ marginTop: 32 }}>Your shelf</h2>
-      <div style={{ marginTop: 8 }}>
-        <Shelf
+        <div>
+          <h2 className="shelf-heading">Your shelf</h2>
+          <div style={{ marginTop: 8 }}>
+            <Shelf
           items={copies.map((c) => ({
             copyId: c.id,
             title: c.book.title,
@@ -32,7 +42,9 @@ export default async function MyBooksPage() {
             statusText: c.status === "available" ? "On your shelf" : statusLabel[c.status],
             warning: c.status === "lent",
           }))}
-        />
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

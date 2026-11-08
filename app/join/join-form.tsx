@@ -47,7 +47,7 @@ export function JoinForm() {
           defaultValue={state.values?.whatsapp}
           required
         />
-        <p className="hint">Only approved members can see your number.</p>
+        <p className="hint">Your number is shared only with members whose request you accept.</p>
       </div>
       <div className="field">
         <label htmlFor="password">Choose a password</label>
@@ -66,7 +66,7 @@ export function JoinForm() {
           {state.error}
         </p>
       )}
-      <SubmitButton pendingText="Sending…">Ask to join</SubmitButton>
+      <SubmitButton pendingText="Joining…">Join the library</SubmitButton>
     </form>
   );
 }

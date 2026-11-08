@@ -5,25 +5,6 @@ import type { Member } from "@/lib/auth";
 import { SubmitButton } from "../../submit-button";
 import { saveProfile, type ProfileState } from "./actions";
 
-const contactChoices = [
-  {
-    value: "whatsapp_any",
-    title: "WhatsApp, for any member",
-    detail: "Approved members can see your number on your page and your books.",
-  },
-  {
-    value: "whatsapp_after_accept",
-    title: "WhatsApp, after I accept a request",
-    detail:
-      "Members see your number only once you accept their request. Until then they can only send a request.",
-  },
-  {
-    value: "email_only",
-    title: "Email only",
-    detail: "Members see your email address instead of your number.",
-  },
-];
-
 function LimitStepper({
   name,
   label,
@@ -109,30 +90,12 @@ export function ProfileForm({
             autoComplete="tel"
             defaultValue={whatsapp}
           />
+          <p className="hint">
+            Members see your number only after you accept their request to borrow a book.
+          </p>
         </div>
       </div>
 
-      <fieldset style={{ border: 0, padding: 0, margin: "32px 0 0" }}>
-        <legend>
-          <h2>How members can contact you</h2>
-        </legend>
-        <div className="stack" style={{ marginTop: 16 }}>
-          {contactChoices.map((choice) => (
-            <label key={choice.value} className="choice">
-              <input
-                type="radio"
-                name="contact_setting"
-                value={choice.value}
-                defaultChecked={member.contact_setting === choice.value}
-              />
-              <div>
-                <strong>{choice.title}</strong>
-                <span>{choice.detail}</span>
-              </div>
-            </label>
-          ))}
-        </div>
-      </fieldset>
 
       <h2 style={{ marginTop: 32 }}>Lending limits</h2>
       <p className="muted small" style={{ marginTop: 8 }}>

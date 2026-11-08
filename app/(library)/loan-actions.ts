@@ -15,6 +15,9 @@ const reasons: Record<string, string> = {
   not_found: "That request has already been handled.",
   not_member: "Please sign in again.",
   already_borrowing: "You already have this copy.",
+  need_books: "Add at least 5 of your own books to your shelf first.",
+  not_admin: "Only the administrator can do that.",
+  not_yourself: "You can't remove yourself.",
 };
 
 async function run(fn: string, args: Record<string, string>): Promise<ActionResult> {

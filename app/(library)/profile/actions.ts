@@ -1,14 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireApprovedMember, type ContactSetting, type ReminderAfter } from "@/lib/auth";
+import { requireApprovedMember, type ReminderAfter } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { siteOrigin } from "@/lib/site-url";
 import { cleanEmail, cleanName, cleanWhatsApp } from "@/lib/validate";
 
 export type ProfileState = { error?: string; saved?: string };
 
-const contactSettings: ContactSetting[] = ["whatsapp_any", "whatsapp_after_accept", "email_only"];
 const reminderOptions: ReminderAfter[] = ["two_weeks", "one_month", "two_months", "never"];
 
 function limit(value: FormDataEntryValue | null): number | null {
@@ -23,13 +22,12 @@ export async function saveProfile(_prev: ProfileState, formData: FormData): Prom
   const fullName = cleanName(formData.get("full_name"));
   const email = cleanEmail(formData.get("email"));
   const whatsapp = cleanWhatsApp(formData.get("whatsapp"));
-  const contactSetting = String(formData.get("contact_setting")) as ContactSetting;
   const reminderAfter = String(formData.get("reminder_after")) as ReminderAfter;
 
   if (!fullName) return { error: "Please enter your first and last name." };
   if (!email) return { error: "Please check your email address." };
   if (!whatsapp) return { error: "Please check your WhatsApp number." };
-  if (!contactSettings.includes(contactSetting) || !reminderOptions.includes(reminderAfter)) {
+  if (!reminderOptions.includes(reminderAfter)) {
     return { error: "Please choose one of the options." };
   }
 
@@ -37,7 +35,6 @@ export async function saveProfile(_prev: ProfileState, formData: FormData): Prom
     .from("members")
     .update({
       full_name: fullName,
-      contact_setting: contactSetting,
       max_lent_at_once: limit(formData.get("max_lent_at_once")),
       max_per_borrower: limit(formData.get("max_per_borrower")),
       reminder_after: reminderAfter,

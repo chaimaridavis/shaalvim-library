@@ -44,7 +44,7 @@ export function ContactButton({
         {isWhatsApp ? "Message on WhatsApp" : `Email ${name}`}
       </a>
       <p className="muted small" style={{ textAlign: "center", marginTop: 8 }}>
-        {isWhatsApp ? "Only approved members can see this number." : contact.value}
+        {isWhatsApp ? "Shared only between the two people in a request." : contact.value}
       </p>
     </>
   );

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { cleanEmail, cleanName, cleanPassword, cleanWhatsApp, passwordRule } from "@/lib/validate";
 
 export type JoinState = {
@@ -37,7 +37,7 @@ export async function askToJoin(_prev: JoinState, formData: FormData): Promise<J
   if (error) {
     if (error.code === "email_exists") {
       return {
-        error: "That email has already asked to join. Use Sign in below instead.",
+        error: "That email already has an account. Use Sign in below instead.",
         values,
       };
     }
@@ -49,9 +49,9 @@ export async function askToJoin(_prev: JoinState, formData: FormData): Promise<J
   const { error: memberError } = await admin.from("members").insert({
     id: userId,
     full_name: fullName,
-    status: isAdmin ? "approved" : "pending",
+    status: "approved",
     is_admin: isAdmin,
-    approved_at: isAdmin ? new Date().toISOString() : null,
+    approved_at: new Date().toISOString(),
   });
   const { error: contactError } = memberError
     ? { error: null }
@@ -63,5 +63,8 @@ export async function askToJoin(_prev: JoinState, formData: FormData): Promise<J
     return { error: "Something went wrong. Please try again in a minute.", values };
   }
 
-  redirect(isAdmin ? "/sign-in?welcome=admin" : "/join/thanks");
+  // Anyone may join; sign them straight in.
+  const supabase = await createClient();
+  await supabase.auth.signInWithPassword({ email, password });
+  redirect("/my-books?welcome=1");
 }

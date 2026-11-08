@@ -11,6 +11,10 @@ export type Book = {
   cover_url: string | null;
 };
 
+// Books a member needs on their shelf before asking to borrow. The database
+// checks the same number (min_books_to_borrow in 07-open-joining.sql).
+export const minBooksToBorrow = 5;
+
 export type CopyStatus = "available" | "lent" | "paused";
 
 export type Copy = {

@@ -5,7 +5,7 @@ import { JoinForm } from "./join-form";
 
 export default async function JoinPage() {
   const member = await getCurrentMember();
-  if (member) redirect(member.status === "approved" ? "/" : "/waiting");
+  if (member) redirect("/");
 
   return (
     <main className="page">

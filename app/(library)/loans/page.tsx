@@ -107,7 +107,6 @@ export default async function LoansPage() {
       ),
     ),
   );
-  const acceptFirst = member.contact_setting === "whatsapp_after_accept";
   const nothing =
     !requests.length &&
     !lentOut.data?.length &&
@@ -117,7 +116,7 @@ export default async function LoansPage() {
   const myReminder = member.reminder_after as ReminderSetting;
 
   return (
-    <div>
+    <div className="narrow">
       <h1>Loans</h1>
       {nothing && (
         <p className="muted" style={{ marginTop: 16 }}>
@@ -133,7 +132,8 @@ export default async function LoansPage() {
             {requests.map((r) => {
               const name = firstName(r.requester.full_name);
               const contact = contacts.get(r.requester.id);
-              const needsAccept = acceptFirst && r.status === "open";
+              // Owners accept first; that is when the asker sees their number.
+              const needsAccept = r.status === "open";
               return (
                 <article key={r.id} className="card request-card">
                   <div className="row" style={{ alignItems: "flex-start" }}>

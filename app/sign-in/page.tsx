@@ -3,11 +3,9 @@ import { redirect } from "next/navigation";
 import { getCurrentMember } from "@/lib/auth";
 import { SignInForm } from "./sign-in-form";
 
-export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
+export default async function SignInPage() {
   const member = await getCurrentMember();
-  if (member) redirect(member.status === "approved" ? "/" : "/waiting");
-
-  const { welcome } = await searchParams;
+  if (member) redirect("/");
 
   return (
     <main className="page">
@@ -16,17 +14,12 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
           Shaalvim Library
         </p>
         <h1>Sign in</h1>
-        {welcome === "admin" && (
-          <p className="notice">
-            Your administrator account is ready. Sign in with the password you just chose.
-          </p>
-        )}
       </div>
       <div style={{ marginTop: 28 }}>
         <SignInForm />
       </div>
       <p style={{ textAlign: "center", marginTop: 20 }}>
-        New here? <Link href="/join">Ask to join</Link>
+        New here? <Link href="/join">Join the library</Link>
       </p>
     </main>
   );

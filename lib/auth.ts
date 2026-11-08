@@ -39,7 +39,7 @@ export const getCurrentMember = cache(async (): Promise<Member | null> => {
 export async function requireApprovedMember(): Promise<Member> {
   const member = await getCurrentMember();
   if (!member) redirect("/join");
-  if (member.status !== "approved") redirect("/waiting");
+  if (member.status !== "approved") redirect("/join");
   return member;
 }
 

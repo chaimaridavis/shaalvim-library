@@ -6,6 +6,7 @@ import {
   firstName,
   initials,
   loadCopies,
+  minBooksToBorrow,
   statusLabel,
   titleStatus,
   type Copy,
@@ -33,7 +34,7 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
   const book = copies[0].book;
   const copyIds = copies.map((c) => c.id);
 
-  const [{ data: requests }, { data: borrowing }, { data: owners }, waiting, places] = await Promise.all([
+  const [{ data: requests }, { data: borrowing }, waiting, places] = await Promise.all([
     supabase
       .from("requests")
       .select("id, copy_id, status, from_waitlist")
@@ -47,17 +48,12 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
       .eq("borrower_id", member.id)
       .is("returned_at", null)
       .in("copy_id", copyIds),
-    supabase
-      .from("members")
-      .select("id, contact_setting")
-      .in("id", [...new Set(copies.map((c) => c.owner.id))]),
     waitingCounts(copyIds),
     myPlaces(),
   ]);
   const myRequest = requests?.[0] ?? null;
   const myPlace = places.find((p) => copyIds.includes(p.copy_id)) ?? null;
   const myLoan = borrowing?.[0] ?? null;
-  const settingOf = new Map((owners ?? []).map((o) => [o.id, o.contact_setting as string]));
 
   const shelfSize = new Map<string, number>();
   for (const c of all) shelfSize.set(c.owner.id, (shelfSize.get(c.owner.id) ?? 0) + 1);
@@ -76,21 +72,17 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
   const rest = copies.filter((c) => c !== featured);
   const headline = titleStatus(copies, member.id);
   const ownerName = firstName(featured.owner.full_name);
-  const ownerSetting = settingOf.get(featured.owner.id);
   const featuredWaiting = waiting.get(featured.id) ?? 0;
   const contact = myRequest || myLoan ? await getContact(featured.owner.id) : null;
   // Waiting for one copy doesn't stop asking for another that is free now.
   const busy = Boolean(myRequest || myLoan);
+  const myShelf = all.filter(isMine).length;
+  const canAsk = myShelf >= minBooksToBorrow;
 
-  const pickupNote =
-    ownerSetting === "whatsapp_after_accept"
-      ? `${ownerName} will see your request. Once ${ownerName} accepts it, you'll get a WhatsApp number to arrange a time to pick it up.`
-      : ownerSetting === "email_only"
-        ? `${ownerName} will see your request. You will get an email address to arrange a time to pick it up.`
-        : `${ownerName} will see your request. You will get a WhatsApp number to arrange a time to pick it up.`;
+  const pickupNote = `${ownerName} will see your request. Once ${ownerName} accepts it, you'll get a WhatsApp number to arrange a time to pick it up.`;
 
   return (
-    <div>
+    <div className="book-page">
       <BackLink label="Browse" fallback="/" />
       <div className="book-head">
         <Cover title={book.title} author={book.author} coverUrl={book.cover_url} size="large" />
@@ -185,6 +177,11 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
           </div>
         ) : isMine(featured) ? null : featured.status === "paused" ? (
           <p className="muted">{ownerName} isn&rsquo;t lending right now.</p>
+        ) : !canAsk ? (
+          <p className="notice">
+            To ask to borrow, add at least {minBooksToBorrow} of your own books to your shelf.
+            You have {myShelf} so far. <Link href="/my-books">Add your books</Link>
+          </p>
         ) : featured.status === "available" && featuredWaiting === 0 ? (
           <>
             <ActionButton action={requestCopy.bind(null, featured.id)} pendingText="Sending your request…">
@@ -222,7 +219,7 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
                     {isMine(c) ? "Yours" : statusLabel[c.status]}
                   </span>
                 </Link>
-                {!busy && !isMine(c) && c.status === "available" && !linedUp(c) && (
+                {canAsk && !busy && !isMine(c) && c.status === "available" && !linedUp(c) && (
                   <ActionButton
                     action={requestCopy.bind(null, c.id)}
                     pendingText="Sending…"
