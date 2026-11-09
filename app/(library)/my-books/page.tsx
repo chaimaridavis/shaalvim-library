@@ -36,6 +36,8 @@ export default async function MyBooksPage({ searchParams }: PageProps<"/my-books
             <Shelf
           items={copies.map((c) => ({
             copyId: c.id,
+            bookId: c.book.id,
+            genre: c.book.genre,
             title: c.book.title,
             author: c.book.author,
             coverUrl: c.book.cover_url,

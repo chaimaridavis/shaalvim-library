@@ -10,6 +10,7 @@ import {
   type Category,
   type LineMatch,
 } from "@/lib/catalog";
+import { isGenre, type Genre } from "@/lib/genres";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 const maxLines = 60;
@@ -26,7 +27,7 @@ async function matchFromLibrary(line: string): Promise<LineMatch | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("books")
-    .select("source, source_id, title, author, first_published, category, cover_url, match_key")
+    .select("source, source_id, title, author, first_published, category, genre, cover_url, match_key")
     .like("match_key", `${titleKey}|%`)
     .limit(5);
   // Compare the end of the author, roughly the surname, so "Dahl" and
@@ -46,6 +47,7 @@ async function matchFromLibrary(line: string): Promise<LineMatch | null> {
       author: hit.author,
       firstPublished: hit.first_published,
       category: hit.category,
+      genre: hit.genre,
       coverUrl: hit.cover_url,
     },
   };
@@ -95,6 +97,7 @@ function isCatalogBook(value: unknown): value is CatalogBook {
     b.author.length <= 300 &&
     (b.firstPublished === null || Number.isInteger(b.firstPublished)) &&
     (b.category === null || categories.includes(b.category)) &&
+    (b.genre === null || b.genre === undefined || isGenre(b.genre)) &&
     (b.coverUrl === null ||
       (typeof b.coverUrl === "string" && coverHosts.includes(hostOf(b.coverUrl))))
   );
@@ -103,7 +106,7 @@ function isCatalogBook(value: unknown): value is CatalogBook {
 export type AddResult = { added: number; alreadyOnShelf: number; error?: string };
 
 export async function addBooks(
-  items: { book: CatalogBook; category: Category | null }[],
+  items: { book: CatalogBook; category: Category | null; genre?: Genre | null }[],
 ): Promise<AddResult> {
   const member = await requireApprovedMember();
   const valid = items
@@ -112,6 +115,7 @@ export async function addBooks(
     .map((item) => ({
       ...item.book,
       category: categories.includes(item.category as Category) ? item.category : item.book.category,
+      genre: isGenre(item.genre) ? item.genre : (item.book.genre ?? null),
     }));
   if (!valid.length) return { added: 0, alreadyOnShelf: 0, error: "Nothing to add." };
 
@@ -128,6 +132,7 @@ export async function addBooks(
         first_published:
           b.firstPublished && b.firstPublished > 0 && b.firstPublished <= 2100 ? b.firstPublished : null,
         category: b.category,
+        genre: b.genre,
         cover_url: b.coverUrl,
         match_key: matchKey(b.title, b.author),
       })),
@@ -141,15 +146,18 @@ export async function addBooks(
   // Look the books up again to get their ids, new and existing alike.
   const { data: books } = await admin
     .from("books")
-    .select("id, source, source_id, category")
+    .select("id, source, source_id, category, genre")
     .in("source_id", valid.map((b) => b.sourceId));
   const idFor = new Map((books ?? []).map((b) => [`${b.source}:${b.source_id}`, b]));
 
-  // Fill in a missing category the member chose.
+  // Fill in a missing kind or genre the member chose.
   for (const b of valid) {
     const row = idFor.get(`${b.source}:${b.sourceId}`);
     if (row && !row.category && b.category) {
       await admin.from("books").update({ category: b.category }).eq("id", row.id).is("category", null);
+    }
+    if (row && !row.genre && b.genre) {
+      await admin.from("books").update({ genre: b.genre }).eq("id", row.id).is("genre", null);
     }
   }
 
@@ -186,4 +194,20 @@ export async function removeCopy(copyId: string) {
   const { error } = await supabase.rpc("remove_copy", { p_copy: copyId });
   if (error) throw error;
   revalidatePath("/", "layout");
+}
+
+// Owners can correct a book's genre; it changes for every copy.
+export async function setGenre(bookId: string, genre: Genre | null): Promise<{ error?: string }> {
+  await requireApprovedMember();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_book_genre", {
+    p_book: bookId,
+    p_genre: isGenre(genre) ? genre : "",
+  });
+  revalidatePath("/", "layout");
+  if (error) {
+    console.error("set_book_genre failed", error);
+    return { error: "Couldn't save the genre. Please try again." };
+  }
+  return {};
 }

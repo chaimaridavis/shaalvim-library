@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { genres, type Genre } from "@/lib/genres";
 import { SearchIcon } from "./my-books/book-search";
 
 const kinds = [
@@ -65,6 +66,35 @@ export function BrowseControls() {
             {k.label}
           </button>
         ))}
+      </div>
+      <div className="browse-selects">
+        <label>
+          <span className="small muted">Genre</span>
+          <select
+            className="select select-small"
+            value={params.get("genre") ?? ""}
+            onChange={(e) => go({ genre: e.target.value })}
+          >
+            <option value="">All genres</option>
+            {(Object.keys(genres) as Genre[]).map((g) => (
+              <option key={g} value={g}>
+                {genres[g]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span className="small muted">Sort by</span>
+          <select
+            className="select select-small"
+            value={params.get("sort") ?? ""}
+            onChange={(e) => go({ sort: e.target.value })}
+          >
+            <option value="">Title</option>
+            <option value="author">Author</option>
+            <option value="recent">Recently added</option>
+          </select>
+        </label>
       </div>
       <label className="check-row">
         <input

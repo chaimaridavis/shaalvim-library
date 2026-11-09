@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from "react";
 import type { CatalogBook, Category } from "@/lib/catalog";
+import type { Genre } from "@/lib/genres";
 import { Cover } from "../../cover";
 import { addBooks, findList } from "./actions";
 import { BookSearch } from "./book-search";
 import { CategoryPicker } from "./category-picker";
+import { GenrePicker } from "./genre-picker";
 
 type Row = {
   key: number;
@@ -15,6 +17,7 @@ type Row = {
   confident: boolean;
   checked: boolean;
   category: Category | null;
+  genre: Genre | null;
   changing: boolean;
 };
 
@@ -42,6 +45,7 @@ export function PasteList() {
           confident: m.confident,
           checked: Boolean(m.book),
           category: m.book?.category ?? null,
+          genre: m.book?.genre ?? null,
           changing: false,
         })),
       );
@@ -59,7 +63,7 @@ export function PasteList() {
 
   function add() {
     startAdding(async () => {
-      const result = await addBooks(chosen.map((r) => ({ book: r.book!, category: r.category })));
+      const result = await addBooks(chosen.map((r) => ({ book: r.book!, category: r.category, genre: r.genre })));
       if (result.error) {
         setMessage({ text: result.error, error: true });
         return;
@@ -86,6 +90,7 @@ export function PasteList() {
               confident: true,
               checked: true,
               category: book.category,
+              genre: book.genre,
               changing: false,
             })
           }
@@ -170,6 +175,11 @@ export function PasteList() {
                       value={row.category}
                       label={`Kind of book for ${row.book!.title}`}
                       onChange={(c) => update(row.key, { category: c })}
+                    />
+                    <GenrePicker
+                      value={row.genre}
+                      label={`Genre for ${row.book!.title}`}
+                      onChange={(g) => update(row.key, { genre: g })}
                     />
                   </div>
                   <button

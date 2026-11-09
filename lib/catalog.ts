@@ -1,4 +1,5 @@
 import "server-only";
+import { genreFrom, type Genre } from "@/lib/genres";
 
 export type Category = "childrens" | "fiction" | "nonfiction" | "comics";
 
@@ -10,6 +11,7 @@ export type CatalogBook = {
   author: string;
   firstPublished: number | null;
   category: Category | null;
+  genre: Genre | null;
   coverUrl: string | null;
 };
 
@@ -129,6 +131,7 @@ async function searchOpenLibrary(params: Record<string, string>, limit: number) 
       author: doc.author_name?.[0] ?? "",
       firstPublished: doc.first_publish_year ?? null,
       category: categoryFrom(doc.subject ?? []),
+      genre: genreFrom(doc.subject ?? []),
       coverUrl: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : null,
     }),
   );
@@ -164,6 +167,7 @@ async function searchGoogle(q: string, limit: number) {
       author: v.authors?.[0] ?? "",
       firstPublished: Number.isInteger(year) && year > 0 ? year : null,
       category: categoryFrom(v.categories ?? []),
+      genre: genreFrom(v.categories ?? []),
       coverUrl: v.imageLinks?.thumbnail?.replace(/^http:/, "https:") ?? null,
     };
   });

@@ -2,10 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { Cover } from "../../cover";
-import { removeCopy } from "./actions";
+import type { Genre } from "@/lib/genres";
+import { removeCopy, setGenre } from "./actions";
+import { GenrePicker } from "./genre-picker";
 
 export type ShelfItem = {
   copyId: string;
+  bookId: string;
+  genre: Genre | null;
   title: string;
   author: string;
   coverUrl: string | null;
@@ -16,6 +20,8 @@ export type ShelfItem = {
 function ShelfRow({ item }: { item: ShelfItem }) {
   const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [genre, setGenreValue] = useState(item.genre);
+  const [saving, startSaving] = useTransition();
 
   return (
     <li className="shelf-row">
@@ -23,6 +29,17 @@ function ShelfRow({ item }: { item: ShelfItem }) {
       <div className="shelf-text">
         <span className="book-name">{item.title}</span>
         <span className={item.warning ? "warning small" : "muted small"}>{item.statusText}</span>
+        <GenrePicker
+          value={genre}
+          label={`Genre for ${item.title}`}
+          disabled={saving}
+          onChange={(g) => {
+            setGenreValue(g);
+            startSaving(async () => {
+              await setGenre(item.bookId, g);
+            });
+          }}
+        />
       </div>
       {confirming ? (
         <div className="confirm">

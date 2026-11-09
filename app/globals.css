@@ -879,3 +879,15 @@ a {
 .shelf-heading {
   margin-top: 32px;
 }
+
+.browse-selects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.browse-selects label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

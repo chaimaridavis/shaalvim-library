@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Category } from "@/lib/catalog";
+import type { Genre } from "@/lib/genres";
 
 export type Book = {
   id: string;
@@ -8,6 +9,7 @@ export type Book = {
   author: string;
   first_published: number | null;
   category: Category | null;
+  genre: Genre | null;
   cover_url: string | null;
 };
 
@@ -39,7 +41,7 @@ export async function loadCopies(ownerId?: string): Promise<Copy[]> {
   let query = supabase
     .from("copies")
     .select(
-      "id, added_at, on_loan, books(id, title, author, first_published, category, cover_url), members(id, full_name, lending_paused)",
+      "id, added_at, on_loan, books(id, title, author, first_published, category, genre, cover_url), members(id, full_name, lending_paused)",
     )
     .is("removed_at", null)
     .order("added_at", { ascending: false });
