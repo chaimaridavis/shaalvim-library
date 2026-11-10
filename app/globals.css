@@ -971,3 +971,17 @@ a {
     padding-right: 48px;
   }
 }
+
+/* The bell keeps its own size inside the top menu. */
+.menu .bell {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  color: var(--text);
+}
+
+.bell svg {
+  flex: none;
+  width: 26px;
+  height: 26px;
+}

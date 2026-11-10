@@ -51,6 +51,26 @@ type PlaceRow = {
   copies: { owner: Person; books: BookBits };
 };
 
+// The ready-written WhatsApp message an owner sends about a request.
+function requestMessage(fromWaitlist: boolean, status: string, name: string, title: string) {
+  if (fromWaitlist) {
+    return {
+      label: `Tell ${name} it's their turn`,
+      message: `Hi ${name}, ${title} is back and you're next in line on the Shaalvim Library. Would you like to pick it up?`,
+    };
+  }
+  if (status === "accepted") {
+    return {
+      label: `Tell ${name} on WhatsApp`,
+      message: `Hi ${name}, happy to lend you ${title} from the Shaalvim Library. When would suit you to pick it up?`,
+    };
+  }
+  return {
+    label: `Message ${name} on WhatsApp`,
+    message: `Hi ${name}, I saw your request to borrow ${title} on the Shaalvim Library.`,
+  };
+}
+
 export default async function LoansPage() {
   const member = await requireApprovedMember();
   const supabase = await createClient();
@@ -102,7 +122,13 @@ export default async function LoansPage() {
   const requests = incoming.data ?? [];
   const contacts = new Map(
     await Promise.all(
-      [...new Set([...requests.map((r) => r.requester.id), ...(borrowed.data ?? []).map((l) => l.copies.owner.id)])].map(
+      [
+        ...new Set([
+          ...requests.map((r) => r.requester.id),
+          ...(borrowed.data ?? []).map((l) => l.copies.owner.id),
+          ...(lentOut.data ?? []).map((l) => l.borrower.id),
+        ]),
+      ].map(
         async (id) => [id, await getContact(id)] as const,
       ),
     ),
@@ -184,7 +210,12 @@ export default async function LoansPage() {
                   </div>
                   {contact && (
                     <div style={{ marginTop: 10 }}>
-                      <ContactButton contact={contact} name={name} style="link" />
+                      <ContactButton
+                        contact={contact}
+                        name={name}
+                        style="link"
+                        {...requestMessage(r.from_waitlist, r.status, name, r.copies.books.title)}
+                      />
                     </div>
                   )}
                 </article>
@@ -219,6 +250,15 @@ export default async function LoansPage() {
                   )}
                   {waitingNow > 0 && (
                     <span className="warning small strong">{peopleWaiting(waitingNow)} for it</span>
+                  )}
+                  {overdue && myReminder !== "never" && contacts.get(l.borrower.id) && (
+                    <ContactButton
+                      contact={contacts.get(l.borrower.id)!}
+                      name={firstName(l.borrower.full_name)}
+                      style="link"
+                      label={`Remind ${firstName(l.borrower.full_name)} on WhatsApp`}
+                      message={`Hi ${firstName(l.borrower.full_name)}, just checking in about ${l.copies.books.title} from the Shaalvim Library. Are you still reading it?`}
+                    />
                   )}
                 </div>
                 <ActionButton

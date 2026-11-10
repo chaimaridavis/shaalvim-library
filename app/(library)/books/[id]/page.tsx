@@ -141,7 +141,18 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
             {contact ? (
               <>
                 <p>Get in touch to arrange a time to pick it up.</p>
-                <ContactButton contact={contact} name={ownerName} />
+                <ContactButton
+                  contact={contact}
+                  name={ownerName}
+                  label={`Let ${ownerName} know on WhatsApp`}
+                  message={
+                    myRequest.status === "accepted"
+                      ? `Hi ${ownerName}, thanks for accepting my request for ${book.title} on the Shaalvim Library. When would suit you for me to pick it up?`
+                      : myRequest.from_waitlist
+                        ? `Hi ${ownerName}, it's my turn for ${book.title} on the Shaalvim Library. When could I pick it up?`
+                        : `Hi ${ownerName}, I've asked to borrow ${book.title} on the Shaalvim Library. When would suit you for me to pick it up?`
+                  }
+                />
               </>
             ) : (
               <p>
