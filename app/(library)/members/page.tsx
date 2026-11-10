@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { dayAndMonth } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
@@ -34,6 +35,9 @@ export default async function MembersPage() {
       <p className="muted">
         Only you can see this page. {list.length} {list.length === 1 ? "member" : "members"}, newest
         first.
+      </p>
+      <p>
+        <Link href="/numbers">See the library&rsquo;s numbers</Link>
       </p>
       {list.map((m) => {
         const books = shelf.get(m.id) ?? 0;

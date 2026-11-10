@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const tabs = [
+// "wide" tabs only fit in the top menu on computers; on phones the
+// Numbers page is reached from Members.
+const tabs: { href: string; label: string; wide?: boolean }[] = [
   { href: "/", label: "Browse" },
   { href: "/my-books", label: "My books" },
   { href: "/loans", label: "Loans" },
@@ -12,7 +14,7 @@ const tabs = [
 
 export function Menu({ isAdmin, bell }: { isAdmin: boolean; bell: React.ReactNode }) {
   const pathname = usePathname();
-  const items = isAdmin ? [...tabs, { href: "/members", label: "Members" }] : tabs;
+  const items = isAdmin ? [...tabs, { href: "/members", label: "Members" }, { href: "/numbers", label: "Numbers", wide: true }] : tabs;
 
   return (
     <nav className="menu" aria-label="Main menu">
@@ -31,7 +33,7 @@ export function Menu({ isAdmin, bell }: { isAdmin: boolean; bell: React.ReactNod
                 ? pathname === "/members"
                 : pathname.startsWith(tab.href);
           return (
-            <li key={tab.href}>
+            <li key={tab.href} className={tab.wide ? "wide-only" : undefined}>
               <Link href={tab.href} aria-current={current ? "page" : undefined}>
                 {tab.label}
               </Link>

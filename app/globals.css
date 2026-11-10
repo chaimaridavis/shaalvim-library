@@ -985,3 +985,134 @@ a {
   width: 26px;
   height: 26px;
 }
+
+/* Numbers page (administrator only) */
+.numbers .section-label {
+  margin-top: 16px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .stat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .stat-grid.four {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.table-card,
+.popular-list {
+  max-width: 760px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+}
+
+.stat-number {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--green);
+}
+
+.stat-label {
+  font-weight: 700;
+}
+
+.table-card {
+  padding: 4px 0;
+  overflow-x: auto;
+}
+
+.numbers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.numbers-table th,
+.numbers-table td {
+  padding: 10px 16px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.numbers-table tr:last-child th,
+.numbers-table tr:last-child td {
+  border-bottom: none;
+}
+
+.numbers-table th:first-child {
+  text-align: left;
+  white-space: normal;
+}
+
+.numbers-table thead th {
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.numbers-table tbody th {
+  font-weight: 400;
+}
+
+.popular-list {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.popular-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.popular-list li:last-child {
+  border-bottom: none;
+}
+
+.popular-list li > .muted {
+  white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+  .menu li.wide-only {
+    display: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .numbers-table th,
+  .numbers-table td {
+    padding: 10px 8px;
+  }
+
+  .numbers-table th:first-child {
+    padding-left: 14px;
+  }
+
+  .numbers-table th:last-child,
+  .numbers-table td:last-child {
+    padding-right: 14px;
+  }
+
+  .numbers-table thead th {
+    font-size: 13px;
+  }
+}
