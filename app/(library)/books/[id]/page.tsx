@@ -208,8 +208,8 @@ export default async function BookPage({ params }: PageProps<"/books/[id]">) {
               Join the waitlist
             </ActionButton>
             <p className="muted" style={{ marginTop: 12 }}>
-              When the book comes back, the next person in line gets an email and can arrange to
-              borrow it.
+              When it&rsquo;s your turn, we&rsquo;ll ask {ownerName} for you and let you know under
+              the bell.
             </p>
           </>
         )}

@@ -1,8 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { requireApprovedMember } from "@/lib/auth";
+import { siteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
+import { emailFirstRequest } from "./request-email";
 
 export type ActionResult = { error?: string };
 
@@ -20,20 +23,33 @@ const reasons: Record<string, string> = {
   not_yourself: "You can't remove yourself.",
 };
 
-async function run(fn: string, args: Record<string, string>): Promise<ActionResult> {
+async function run(
+  fn: string,
+  args: Record<string, string>,
+  then?: (result: unknown) => void,
+): Promise<ActionResult> {
   await requireApprovedMember();
   const supabase = await createClient();
-  const { error } = await supabase.rpc(fn, args);
+  const { data, error } = await supabase.rpc(fn, args);
   revalidatePath("/", "layout");
-  if (!error) return {};
+  if (!error) {
+    then?.(data);
+    return {};
+  }
   if (reasons[error.message]) return { error: reasons[error.message] };
   console.error(`${fn} failed`, error);
   return { error: "Something went wrong. Please try again in a minute." };
 }
 
 // Asks to borrow, or joins the waitlist when the copy can't be lent now.
+// A first request between two people who haven't lent to each other before
+// also goes to the owner by email, since they may not visit the site often.
 export async function requestCopy(copyId: string) {
-  return run("request_copy", { p_copy: copyId });
+  const member = await requireApprovedMember();
+  const origin = await siteOrigin();
+  return run("request_copy", { p_copy: copyId }, (result) => {
+    if (result === "requested") after(() => emailFirstRequest(member.id, copyId, origin));
+  });
 }
 
 export async function leaveWaitlist(entryId: string) {
