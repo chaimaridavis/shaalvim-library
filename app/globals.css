@@ -891,3 +891,83 @@ a {
   flex-direction: column;
   gap: 2px;
 }
+
+/* Notifications */
+.bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--text);
+  border-radius: 50%;
+}
+
+.bell-count {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--brown);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* Phones: the bell in the top corner; computers: at the end of the menu. */
+.bell-corner {
+  position: absolute;
+  top: 18px;
+  right: 12px;
+  z-index: 5;
+}
+
+.bell-in-menu {
+  display: none;
+}
+
+.note-list {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 12px;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.note-new a {
+  background: var(--card);
+  border-left: 3px solid var(--brown);
+}
+
+@media (min-width: 900px) {
+  .bell-corner {
+    display: none;
+  }
+
+  .bell-in-menu {
+    display: block;
+    margin-left: 8px;
+  }
+}
+
+@media (max-width: 899px) {
+  /* Room for the bell in the top corner. */
+  .title-row,
+  .page.with-menu > * > h1:first-child {
+    padding-right: 48px;
+  }
+}

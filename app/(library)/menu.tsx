@@ -10,7 +10,7 @@ const tabs = [
   { href: "/profile", label: "Profile" },
 ];
 
-export function Menu({ isAdmin }: { isAdmin: boolean }) {
+export function Menu({ isAdmin, bell }: { isAdmin: boolean; bell: React.ReactNode }) {
   const pathname = usePathname();
   const items = isAdmin ? [...tabs, { href: "/members", label: "Members" }] : tabs;
 
@@ -39,6 +39,8 @@ export function Menu({ isAdmin }: { isAdmin: boolean }) {
           );
         })}
       </ul>
+      {/* On computers the bell sits at the end of the top menu. */}
+      <div className="bell-in-menu">{bell}</div>
       </div>
     </nav>
   );
