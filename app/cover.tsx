@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 // A book cover from the catalog, or a plain colored block with the title and
@@ -15,6 +16,9 @@ const blockColors = [
   "#8a5335",
   "#2b2118",
 ];
+
+// How wide each kind of cover shows, so the right-sized copy is fetched.
+const sizes = { grid: "(min-width: 900px) 180px, 45vw", large: "220px", thumb: "46px" };
 
 function colorFor(title: string) {
   let hash = 0;
@@ -38,12 +42,13 @@ export function Cover({
 
   if (coverUrl && !failed) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- catalog covers are already small
-      <img
+      <Image
         className={className}
         src={coverUrl}
         alt={`Cover of ${title}`}
-        loading="lazy"
+        width={200}
+        height={300}
+        sizes={sizes[size]}
         onError={() => setFailed(true)}
         // The catalog sends a tiny blank picture when it has no real cover.
         onLoad={(e) => e.currentTarget.naturalWidth < 10 && setFailed(true)}
